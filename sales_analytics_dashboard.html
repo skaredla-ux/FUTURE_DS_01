@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Business Sales Performance Analytics — 2023–2024</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b0e14;
+    --surface: #13171f;
+    --surface2: #1a1f2b;
+    --border: #252b38;
+    --accent: #4fffb0;
+    --accent2: #4f8fff;
+    --accent3: #ff7c4f;
+    --accent4: #d94fff;
+    --text: #e8ecf0;
+    --muted: #6e7a8a;
+    --font-head: 'DM Serif Display', serif;
+    --font-body: 'Outfit', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* Grain overlay */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.5;
+  }
+
+  header {
+    padding: 48px 48px 32px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  header .brand {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  header .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  header h1 {
+    font-family: var(--font-head);
+    font-size: clamp(26px, 4vw, 42px);
+    line-height: 1.15;
+    color: var(--text);
+  }
+
+  header .subtitle {
+    color: var(--muted);
+    font-size: 13px;
+    font-family: var(--font-mono);
+  }
+
+  .badge {
+    background: rgba(79,255,176,0.08);
+    border: 1px solid rgba(79,255,176,0.25);
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 6px 14px;
+    border-radius: 2px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  main {
+    padding: 40px 48px;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+    max-width: 1440px;
+    margin: 0 auto;
+  }
+
+  /* KPI Row */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 2px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .kpi-card {
+    background: var(--surface);
+    padding: 28px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: relative;
+    overflow: hidden;
+    transition: background 0.2s;
+  }
+
+  .kpi-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--kpi-color, var(--accent));
+    transform: scaleX(0);
+    transition: transform 0.4s ease;
+    transform-origin: left;
+  }
+
+  .kpi-card:hover::after { transform: scaleX(1); }
+  .kpi-card:hover { background: var(--surface2); }
+
+  .kpi-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .kpi-value {
+    font-family: var(--font-head);
+    font-size: 32px;
+    line-height: 1;
+    color: var(--kpi-color, var(--accent));
+  }
+
+  .kpi-sub {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  /* Section headers */
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .section-header .line {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .section-title {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  /* Chart containers */
+  .charts-row {
+    display: grid;
+    gap: 2px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .chart-panel {
+    background: var(--surface);
+    padding: 28px;
+  }
+
+  .chart-panel h3 {
+    font-family: var(--font-head);
+    font-size: 18px;
+    margin-bottom: 6px;
+  }
+
+  .chart-panel p {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 24px;
+  }
+
+  .chart-wrap {
+    position: relative;
+  }
+
+  .cols-2 { grid-template-columns: 1fr 1fr; }
+  .cols-3 { grid-template-columns: 2fr 1fr 1fr; }
+
+  /* Insights section */
+  .insights-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .insight-card {
+    background: var(--surface);
+    padding: 28px;
+  }
+
+  .insight-card .tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 2px;
+    margin-bottom: 16px;
+    display: inline-block;
+  }
+
+  .tag-green { background: rgba(79,255,176,0.1); color: var(--accent); }
+  .tag-blue { background: rgba(79,143,255,0.1); color: var(--accent2); }
+  .tag-orange { background: rgba(255,124,79,0.1); color: var(--accent3); }
+
+  .insight-card h4 {
+    font-family: var(--font-head);
+    font-size: 19px;
+    margin-bottom: 10px;
+    line-height: 1.3;
+  }
+
+  .insight-card p {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+
+  /* Recommendations */
+  .reco-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .reco-card {
+    background: var(--surface);
+    padding: 28px;
+    display: flex;
+    gap: 20px;
+  }
+
+  .reco-num {
+    font-family: var(--font-head);
+    font-style: italic;
+    font-size: 48px;
+    line-height: 1;
+    color: var(--border);
+    flex-shrink: 0;
+    width: 40px;
+  }
+
+  .reco-content h4 {
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 15px;
+    margin-bottom: 8px;
+    color: var(--text);
+  }
+
+  .reco-content p {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 24px 48px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  footer p {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+  }
+
+  @media (max-width: 900px) {
+    main { padding: 24px 20px; }
+    header { padding: 28px 20px; }
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .cols-2, .cols-3 { grid-template-columns: 1fr; }
+    .insights-grid, .reco-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <span class="eyebrow">Future Interns · Data Science &amp; Analytics · Task 1</span>
+    <h1>Business Sales<br>Performance Analytics</h1>
+    <span class="subtitle">Period: January 2023 – December 2024 &nbsp;·&nbsp; 800 transactions analysed</span>
+  </div>
+  <span class="badge">Report 2025</span>
+</header>
+
+<main>
+
+  <!-- KPIs -->
+  <div>
+    <div class="section-header">
+      <span class="section-title">Key Performance Indicators</span>
+      <div class="line"></div>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi-card" style="--kpi-color: #4fffb0">
+        <span class="kpi-label">Total Revenue</span>
+        <span class="kpi-value">$755.8K</span>
+        <span class="kpi-sub">Across all categories &amp; regions</span>
+      </div>
+      <div class="kpi-card" style="--kpi-color: #4f8fff">
+        <span class="kpi-label">Total Profit</span>
+        <span class="kpi-value">$184.4K</span>
+        <span class="kpi-sub">Net after COGS &amp; discounts</span>
+      </div>
+      <div class="kpi-card" style="--kpi-color: #d94fff">
+        <span class="kpi-label">Profit Margin</span>
+        <span class="kpi-value">24.4%</span>
+        <span class="kpi-sub">Overall blended margin</span>
+      </div>
+      <div class="kpi-card" style="--kpi-color: #ff7c4f">
+        <span class="kpi-label">Total Orders</span>
+        <span class="kpi-value">800</span>
+        <span class="kpi-sub">2 fiscal years</span>
+      </div>
+      <div class="kpi-card" style="--kpi-color: #ffe04f">
+        <span class="kpi-label">Avg. Order Value</span>
+        <span class="kpi-value">$945</span>
+        <span class="kpi-sub">Per transaction average</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Revenue Trend -->
+  <div>
+    <div class="section-header">
+      <span class="section-title">Revenue &amp; Profit Trend</span>
+      <div class="line"></div>
+    </div>
+    <div class="charts-row">
+      <div class="chart-panel">
+        <h3>Monthly Revenue vs. Profit</h3>
+        <p>24-month trend showing revenue peaks and profit contribution per month</p>
+        <div class="chart-wrap" style="height:300px">
+          <canvas id="trendChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Category + Region -->
+  <div>
+    <div class="section-header">
+      <span class="section-title">Category &amp; Regional Breakdown</span>
+      <div class="line"></div>
+    </div>
+    <div class="charts-row cols-2">
+      <div class="chart-panel">
+        <h3>Revenue by Category</h3>
+        <p>Technology dominates volume; Office Supplies leads on margin</p>
+        <div class="chart-wrap" style="height:260px">
+          <canvas id="catChart"></canvas>
+        </div>
+      </div>
+      <div class="chart-panel">
+        <h3>Revenue by Region</h3>
+        <p>West leads revenue; opportunity gap visible in South</p>
+        <div class="chart-wrap" style="height:260px">
+          <canvas id="regChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top Products -->
+  <div>
+    <div class="section-header">
+      <span class="section-title">Product Performance</span>
+      <div class="line"></div>
+    </div>
+    <div class="charts-row">
+      <div class="chart-panel">
+        <h3>Top 8 Products — Revenue &amp; Profit</h3>
+        <p>Laptop Pro X1 is the single biggest revenue driver; Conference Table delivers strong absolute profit</p>
+        <div class="chart-wrap" style="height:280px">
+          <canvas id="productChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Margin by category bar -->
+  <div>
+    <div class="section-header">
+      <span class="section-title">Profitability Analysis</span>
+      <div class="line"></div>
+    </div>
+    <div class="charts-row cols-2">
+      <div class="chart-panel">
+        <h3>Profit Margin by Category</h3>
+        <p>Office Supplies punch above their weight — 42% margin vs 20.7% for Technology</p>
+        <div class="chart-wrap" style="height:220px">
+          <canvas id="marginChart"></canvas>
+        </div>
+      </div>
+      <div class="chart-panel">
+        <h3>Orders Distribution by Region</h3>
+        <p>Order volume roughly follows revenue share across the four regions</p>
+        <div class="chart-wrap" style="height:220px">
+          <canvas id="ordersChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Insights -->
+  <div>
+    <div class="section-header">
+      <span class="section-title">Key Insights</span>
+      <div class="line"></div>
+    </div>
+    <div class="insights-grid">
+      <div class="insight-card">
+        <span class="tag tag-green">✦ Growth</span>
+        <h4>Q4 Is the Revenue Engine</h4>
+        <p>December 2023 ($62.9K) and July 2024 ($62.9K) represent the two highest-revenue months. Both periods follow promotional cycles and back-to-school / year-end procurement peaks. Aligning stock and campaigns ahead of these windows could amplify performance significantly.</p>
+      </div>
+      <div class="insight-card">
+        <span class="tag tag-orange">✦ Opportunity</span>
+        <h4>Office Supplies Are Underinvested</h4>
+        <p>Despite a 42% profit margin — nearly double Technology's 20.7% — Office Supplies contribute only 4.2% of total revenue. Increasing SKU range, cross-sell bundling with hardware orders, and targeted promotions could unlock disproportionate profit growth at low incremental cost.</p>
+      </div>
+      <div class="insight-card">
+        <span class="tag tag-blue">✦ Risk</span>
+        <h4>Revenue Concentration in One Product</h4>
+        <p>Laptop Pro X1 alone accounts for $207K — 27.4% of all revenue. This level of concentration creates vulnerability to supply disruption or competition. Diversifying the technology portfolio and building stronger mid-tier SKUs would reduce this single-product dependency.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recommendations -->
+  <div>
+    <div class="section-header">
+      <span class="section-title">Actionable Recommendations</span>
+      <div class="line"></div>
+    </div>
+    <div class="reco-grid">
+      <div class="reco-card">
+        <div class="reco-num">01</div>
+        <div class="reco-content">
+          <h4>Scale Office Supplies Through Bundling</h4>
+          <p>Package Office Supplies with Technology orders. A "starter kit" bundle alongside every Laptop or Monitor purchase can double Office Supplies revenue within 2 quarters while protecting the 42% margin. Consider loyalty subscriptions for repeat consumables.</p>
+        </div>
+      </div>
+      <div class="reco-card">
+        <div class="reco-num">02</div>
+        <div class="reco-content">
+          <h4>Activate the South Region with Targeted Campaigns</h4>
+          <p>The South region lags the West by $104K in revenue on only a 17% smaller customer base. Localised email campaigns, regionally adjusted pricing, and a dedicated sales rep could close at least half this gap, adding an estimated $50K+ annually.</p>
+        </div>
+      </div>
+      <div class="reco-card">
+        <div class="reco-num">03</div>
+        <div class="reco-content">
+          <h4>Front-Load Inventory Before Demand Peaks</h4>
+          <p>December and July show revenue spikes of 40–80% above monthly average. Ensuring safety stock of top-5 SKUs 6 weeks before these periods eliminates stockout risk during the highest-value windows. Introduce early-bird discounts in November and June to smooth demand.</p>
+        </div>
+      </div>
+      <div class="reco-card">
+        <div class="reco-num">04</div>
+        <div class="reco-content">
+          <h4>Reduce Single-Product Revenue Dependency</h4>
+          <p>With Laptop Pro X1 at 27.4% of total revenue, a product discontinuation or margin squeeze would materially impact the business. Invest in growing Monitor 27" and Tablet S8 as secondary anchors. Introduce 1–2 new mid-tier tech SKUs per half-year to broaden the base.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  <p>Data Science &amp; Analytics Task 1 · Future Interns 2026 Internship</p>
+  <p>Dataset: Simulated Business Sales Data (2023–2024) · Tool: Python + Chart.js · Analyst: Intern Report</p>
+</footer>
+
+<script>
+const PALETTE = {
+  green: '#4fffb0',
+  blue: '#4f8fff',
+  orange: '#ff7c4f',
+  purple: '#d94fff',
+  yellow: '#ffe04f',
+  teal: '#4ffff5',
+  grid: '#1e2433',
+  muted: '#6e7a8a',
+};
+
+Chart.defaults.color = PALETTE.muted;
+Chart.defaults.font.family = "'DM Mono', monospace";
+Chart.defaults.font.size = 11;
+
+// Helper
+const fmt = v => '$' + (v >= 1000 ? (v/1000).toFixed(1)+'K' : v);
+
+// 1. TREND CHART
+const monthly = [
+  {m:'Jan 23',r:26374,p:6041},{m:'Feb 23',r:21005,p:5419},{m:'Mar 23',r:42936,p:10258},
+  {m:'Apr 23',r:30258,p:6854},{m:'May 23',r:23807,p:5924},{m:'Jun 23',r:27975,p:7540},
+  {m:'Jul 23',r:26015,p:6803},{m:'Aug 23',r:44074,p:10716},{m:'Sep 23',r:47819,p:12057},
+  {m:'Oct 23',r:13011,p:3050},{m:'Nov 23',r:17818,p:4871},{m:'Dec 23',r:62917,p:14338},
+  {m:'Jan 24',r:46878,p:10208},{m:'Feb 24',r:38318,p:8734},{m:'Mar 24',r:31951,p:7450},
+  {m:'Apr 24',r:18647,p:5713},{m:'May 24',r:33575,p:8539},{m:'Jun 24',r:28195,p:6809},
+  {m:'Jul 24',r:62890,p:14537},{m:'Aug 24',r:16126,p:4401},{m:'Sep 24',r:23427,p:5475},
+  {m:'Oct 24',r:30902,p:7599},{m:'Nov 24',r:20082,p:5642},{m:'Dec 24',r:20802,p:5452}
+];
+
+new Chart(document.getElementById('trendChart'), {
+  type: 'bar',
+  data: {
+    labels: monthly.map(d => d.m),
+    datasets: [
+      {
+        label: 'Revenue',
+        data: monthly.map(d => d.r),
+        backgroundColor: 'rgba(79,255,176,0.15)',
+        borderColor: PALETTE.green,
+        borderWidth: 1.5,
+        borderRadius: 2,
+        order: 2
+      },
+      {
+        label: 'Profit',
+        data: monthly.map(d => d.p),
+        type: 'line',
+        borderColor: PALETTE.blue,
+        backgroundColor: 'rgba(79,143,255,0.1)',
+        borderWidth: 2,
+        pointRadius: 3,
+        pointBackgroundColor: PALETTE.blue,
+        fill: true,
+        tension: 0.4,
+        order: 1
+      }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'top', labels: { boxWidth: 12, padding: 20 } },
+      tooltip: {
+        callbacks: {
+          label: ctx => ctx.dataset.label + ': ' + fmt(ctx.raw)
+        }
+      }
+    },
+    scales: {
+      x: { grid: { color: PALETTE.grid }, ticks: { maxRotation: 45 } },
+      y: { grid: { color: PALETTE.grid }, ticks: { callback: v => fmt(v) } }
+    }
+  }
+});
+
+// 2. CATEGORY CHART
+new Chart(document.getElementById('catChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Technology', 'Furniture', 'Office Supplies'],
+    datasets: [
+      { label: 'Revenue', data: [419117, 305257, 31426], backgroundColor: [PALETTE.green, PALETTE.blue, PALETTE.orange], borderRadius: 3 },
+      { label: 'Profit', data: [86652, 84571, 13209], backgroundColor: ['rgba(79,255,176,0.25)', 'rgba(79,143,255,0.25)', 'rgba(255,124,79,0.25)'], borderRadius: 3 }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'top', labels: { boxWidth: 12 } },
+      tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + fmt(ctx.raw) } } },
+    scales: {
+      x: { grid: { color: PALETTE.grid } },
+      y: { grid: { color: PALETTE.grid }, ticks: { callback: v => fmt(v) } }
+    }
+  }
+});
+
+// 3. REGION PIE
+new Chart(document.getElementById('regChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['West', 'East', 'Central', 'South'],
+    datasets: [{
+      data: [257751, 178200, 166134, 153716],
+      backgroundColor: [PALETTE.green, PALETTE.blue, PALETTE.orange, PALETTE.purple],
+      borderColor: '#0b0e14',
+      borderWidth: 3,
+      hoverOffset: 8
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    cutout: '62%',
+    plugins: {
+      legend: { position: 'bottom', labels: { boxWidth: 12, padding: 14 } },
+      tooltip: { callbacks: { label: ctx => ctx.label + ': ' + fmt(ctx.raw) + ' (' + (ctx.raw/755800*100).toFixed(1)+'%)' } }
+    }
+  }
+});
+
+// 4. TOP PRODUCTS
+const products = ['Laptop Pro X1','Conference Table','Tablet S8','Standing Desk','Monitor 27"','Printer LaserJet','Executive Chair','Filing Cabinet'];
+const pRev = [207073,125535,66416,65056,63663,42866,41392,27777];
+const pProfit = [35990,30406,12833,17597,13326,10206,11843,8172];
+
+new Chart(document.getElementById('productChart'), {
+  type: 'bar',
+  data: {
+    labels: products,
+    datasets: [
+      { label: 'Revenue', data: pRev, backgroundColor: 'rgba(79,255,176,0.2)', borderColor: PALETTE.green, borderWidth: 1.5, borderRadius: 3 },
+      { label: 'Profit', data: pProfit, backgroundColor: 'rgba(79,143,255,0.35)', borderColor: PALETTE.blue, borderWidth: 1.5, borderRadius: 3 }
+    ]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'top', labels: { boxWidth: 12 } },
+      tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + fmt(ctx.raw) } }
+    },
+    scales: {
+      x: { grid: { color: PALETTE.grid }, ticks: { callback: v => fmt(v) } },
+      y: { grid: { color: PALETTE.grid } }
+    }
+  }
+});
+
+// 5. MARGIN BAR
+new Chart(document.getElementById('marginChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Technology', 'Furniture', 'Office Supplies'],
+    datasets: [{
+      label: 'Profit Margin %',
+      data: [20.7, 27.7, 42.0],
+      backgroundColor: [PALETTE.orange, PALETTE.blue, PALETTE.green],
+      borderRadius: 4
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: ctx => ctx.raw + '%' } }
+    },
+    scales: {
+      x: { grid: { color: PALETTE.grid } },
+      y: { grid: { color: PALETTE.grid }, ticks: { callback: v => v + '%' }, max: 55 }
+    }
+  }
+});
+
+// 6. ORDERS PIE
+new Chart(document.getElementById('ordersChart'), {
+  type: 'pie',
+  data: {
+    labels: ['West', 'East', 'Central', 'South'],
+    datasets: [{
+      data: [34, 24, 22, 20],
+      backgroundColor: [PALETTE.green, PALETTE.blue, PALETTE.orange, PALETTE.purple],
+      borderColor: '#0b0e14',
+      borderWidth: 3,
+      hoverOffset: 6
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'bottom', labels: { boxWidth: 12, padding: 14 } },
+      tooltip: { callbacks: { label: ctx => ctx.label + ': ~' + ctx.raw + '% of orders' } }
+    }
+  }
+});
+</script>
+</body>
+</html>
