@@ -16,7 +16,7 @@ Analyzed 800 business sales transactions across 2023–2024 to uncover revenue t
 - HTML/CSS (dashboard)
 
 📁 Files
-- `index.html` — Full interactive dashboard
+- `sales_analytics_dashboard.html` — Full interactive dashboard
 
 🔗 Live Dashboard
 [Click here to view](https://skaredla-ux.github.io/futureinterns-ds-task1/)
